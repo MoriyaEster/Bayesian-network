@@ -4,11 +4,13 @@ public class BayesianNode {
     private String name;
     private List<String> outcomes;
     private List<String> given;
+    private boolean visited;
 
     public BayesianNode(String name, List<String> outcomes, List<String> given) {
         this.name = name;
         this.outcomes = outcomes;
         this.given = given;
+        this.visited = false;
     }
 
     // Getters and Setters
@@ -34,5 +36,13 @@ public class BayesianNode {
 
     public void setGiven(List<String> given) {
         this.given = given;
+    }
+
+    public boolean isVisited() {
+        return visited;
+    }
+
+    public void setVisited(boolean visited) {
+        this.visited = visited;
     }
 }

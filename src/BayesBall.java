@@ -9,8 +9,8 @@ public class BayesBall {
 
     public boolean isConditionallyIndependent(String start, String end, Set<String> evidenceSet) {
         Set<String> evidence = parseEvidence(evidenceSet);
-        Set<String> visited = new HashSet<>();
-        return !canReach(start, end, evidence, visited, "up", null);
+        Map<String, Set<String>> visitedFrom = new HashMap<>();
+        return !canReach(start, end, evidence, visitedFrom, "down", null);
     }
 
     private Set<String> parseEvidence(Set<String> evidenceSet) {
@@ -24,7 +24,7 @@ public class BayesBall {
         return evidenceNodes;
     }
 
-    private boolean canReach(String current, String target, Set<String> evidence, Set<String> visited, String direction, String cameFrom) {
+    private boolean canReach(String current, String target, Set<String> evidence, Map<String, Set<String>> visitedFrom, String direction, String cameFrom) {
         System.out.println("Visiting: " + current + ", Direction: " + direction + ", Came from: " + cameFrom + ", Evidence: " + evidence);
 
         if (current.equals(target)) {
@@ -37,19 +37,28 @@ public class BayesBall {
             return false;
         }
 
-        boolean canContinue = direction.equals("up") || !evidence.contains(current);
-        if (canContinue) {
-            visited.add(current);
-            System.out.println("Added to visited: " + current);
+        if (!visitedFrom.containsKey(current)) {
+            visitedFrom.put(current, new HashSet<>());
         }
+        visitedFrom.get(current).add(direction);
 
         List<String> parents = getParents(current);
         List<String> children = getChildren(current);
 
+        boolean canContinue = direction.equals("up") || !evidence.contains(current);
+        if (canContinue) {
+            if (visitedFrom.get(current).contains("up") && visitedFrom.get(current).contains("down")) {
+                if (visitedFrom.get(current).containsAll(parents) && visitedFrom.get(current).containsAll(children)) {
+                    visitedFrom.put(current, Collections.singleton("visited"));
+                    System.out.println("Added to visited: " + current);
+                }
+            }
+        }
+
         if (direction.equals("up")) {
             for (String child : children) {
-                if (child.equals(cameFrom) || visited.contains(child)) continue;
-                if (canReach(child, target, evidence, visited, "up", current)) {
+                if (child.equals(cameFrom) || visitedFrom.getOrDefault(child, Collections.emptySet()).contains("visited")) continue;
+                if (canReach(child, target, evidence, visitedFrom, "up", current)) {
                     return true;
                 }
             }
@@ -57,15 +66,23 @@ public class BayesBall {
 
         if (direction.equals("down") || evidence.contains(current)) {
             for (String child : children) {
-                if (child.equals(cameFrom) || visited.contains(child)) continue;
-                if (canReach(child, target, evidence, visited, "down", current)) {
+                if (child.equals(cameFrom) || visitedFrom.getOrDefault(child, Collections.emptySet()).contains("visited")) continue;
+                if (canReach(child, target, evidence, visitedFrom, "up", current)) {
                     return true;
                 }
             }
-            if (direction.equals("down") || evidence.contains(current)) {
+            if (direction.equals("up") && evidence.contains(current)) {
                 for (String parent : parents) {
-                    if (parent.equals(cameFrom) || visited.contains(parent)) continue;
-                    if (canReach(parent, target, evidence, visited, "up", current)) {
+                    if (visitedFrom.getOrDefault(parent, Collections.emptySet()).contains("visited")) continue;
+                    if (canReach(parent, target, evidence, visitedFrom, "down", current)) {
+                        return true;
+                    }
+                }
+            }
+            if (direction.equals("down") && !evidence.contains(current)) {
+                for (String parent : parents) {
+                    if (visitedFrom.getOrDefault(parent, Collections.emptySet()).contains("visited")) continue;
+                    if (canReach(parent, target, evidence, visitedFrom, "down", current)) {
                         return true;
                     }
                 }
@@ -96,4 +113,5 @@ public class BayesBall {
         System.out.println("Children of " + nodeName + ": " + children);
         return children;
     }
+
 }
