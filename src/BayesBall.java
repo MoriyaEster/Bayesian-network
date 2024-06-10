@@ -11,7 +11,7 @@ public class BayesBall {
     public boolean isConditionallyIndependent(String start, String end, Set<String> evidenceSet) {
         Set<String> evidence = parseEvidence(evidenceSet);
         visited.clear();
-        return !traverseBayesBall(start, end, evidence, "down");
+        return !travelBayesBall(start, end, evidence, "down");
     }
 
     private Set<String> parseEvidence(Set<String> evidenceSet) {
@@ -23,59 +23,6 @@ public class BayesBall {
             }
         }
         return evidenceNodes;
-    }
-
-    private boolean traverseBayesBall(String current, String target, Set<String> evidence, String direction) {
-        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
-
-        List<String> parents = getParents(current);
-        List<String> children = getChildren(current);
-
-        if (visited.contains(current + direction)) return false;
-        visited.add(current + direction);
-
-        if (current.equals(target)) {
-            System.out.println("Reached target: " + target);
-            return true;
-        }
-
-        if (!evidence.contains(current)) {
-            if (direction.equals("down")) {
-                // Traverse to children and parents if current node is not in the evidence and direction is down
-                for (String child : children) {
-                    if (traverseBayesBall(child, target, evidence, "up")) {
-                        return true;
-                    }
-                }
-                for (String parent : parents) {
-                    if (traverseBayesBall(parent, target, evidence, "down")) {
-                        return true;
-                    }
-                }
-            }
-            else if (direction.equals("up")) {
-                // Traverse to children if current node is not in the evidence and direction is up
-                for (String child : children) {
-                    if (traverseBayesBall(child, target, evidence, "up")) {
-                        return true;
-                    }
-                }
-            }
-        } else {
-            // Stop descending if current node is in the evidence and direction is down
-            if (direction.equals("down")) {
-                return false;
-            }
-            // Traverse to parents if current node is in the evidence and direction is up
-            else if (direction.equals("up")) {
-                for (String parent : parents) {
-                    if (!current.equals(parent) && traverseBayesBall(parent, target, evidence, "down")) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     private List<String> getParents(String nodeName) {
@@ -98,5 +45,58 @@ public class BayesBall {
         }
         System.out.println("Children of " + nodeName + ": " + children);
         return children;
+    }
+
+    private boolean travelBayesBall(String current, String target, Set<String> evidence, String direction) {
+        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
+
+        if (current.equals(target)) {
+            System.out.println("Reached target: " + target);
+            return true;
+        }
+
+        List<String> parents = getParents(current);
+        List<String> children = getChildren(current);
+
+        if (visited.contains(current + direction)) return false;
+        visited.add(current + direction);
+
+        if (!evidence.contains(current)) {
+            if (direction.equals("down")) {
+                // Traverse to children and parents if current node is not in the evidence and direction is down
+                for (String child : children) {
+                    if (travelBayesBall(child, target, evidence, "up")) {
+                        return true;
+                    }
+                }
+                for (String parent : parents) {
+                    if (travelBayesBall(parent, target, evidence, "down")) {
+                        return true;
+                    }
+                }
+            }
+            else if (direction.equals("up")) {
+                // Traverse to children if current node is not in the evidence and direction is up
+                for (String child : children) {
+                    if (travelBayesBall(child, target, evidence, "up")) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            // Stop descending if current node is in the evidence and direction is down
+            if (direction.equals("down")) {
+                return false;
+            }
+            // Traverse to parents if current node is in the evidence and direction is up
+            else if (direction.equals("up")) {
+                for (String parent : parents) {
+                    if (!current.equals(parent) && travelBayesBall(parent, target, evidence, "down")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
