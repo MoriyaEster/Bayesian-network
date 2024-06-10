@@ -2,6 +2,7 @@ import java.util.*;
 
 public class BayesBall {
     private BayesianNetwork network;
+    Set<String> visited = new HashSet<>();
 
     public BayesBall(BayesianNetwork network) {
         this.network = network;
@@ -9,8 +10,8 @@ public class BayesBall {
 
     public boolean isConditionallyIndependent(String start, String end, Set<String> evidenceSet) {
         Set<String> evidence = parseEvidence(evidenceSet);
-        Set<String> visited = new HashSet<>();
-        return !canReach(start, end, evidence, visited, "down", null);
+        visited.clear();
+        return !traverseBayesBall(start, end, evidence,"down");
     }
 
     private Set<String> parseEvidence(Set<String> evidenceSet) {
@@ -24,62 +25,50 @@ public class BayesBall {
         return evidenceNodes;
     }
 
-    private boolean canReach(String current, String target, Set<String> evidence, Set<String> visited, String direction, String cameFrom) {
-        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Came from: " + cameFrom + ", Evidence: " + evidence);
+    private boolean traverseBayesBall(String current, String target, Set<String> evidence,String direction) {
+        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
 
         List<String> parents = getParents(current);
         List<String> children = getChildren(current);
-        for(String visit : visited){
-            System.out.print(" visited: " + visit);
-        }
 
-        if (visited.contains(current)){
-            for (String child : children){
-                if (visited.contains(child)){
-                    for (String parent : parents) {
-                        if (visited.contains(parent)) {
-                            return false;
-                        }
-                    }
-                }
-            }
+        if (visited.contains(current + direction)) {
+            return false;
         }
-        System.out.println();
-        visited.add(current);
+        visited.add(current + direction);
 
         if (current.equals(target)) {
             System.out.println("Reached target: " + target);
             return true;
         }
 
-        if (direction.equals("down")) {
-            if (evidence.contains(current)){
-                return false;
+        if (evidence.contains(current)) {
+            if (direction.equals("up")) {
+                // Traverse to parents if current node is in the evidence and direction is up
+                for (String parent : parents) {
+                    if (!current.equals(parent) && traverseBayesBall(parent, target, evidence, "down")) {
+                        return true;
+                    }
+                }
+            } else if (direction.equals("down")) {
+                return false; // Stop descending if current node is in the evidence and direction is down
             }
-            else if (!evidence.contains(current)){
+        } else {
+            if (direction.equals("up")) {
+                // Traverse to children if current node is not in the evidence and direction is up
                 for (String child : children) {
-                    if (canReach(child, target, evidence, visited, "up", current)) {
+                    if (traverseBayesBall(child, target, evidence, "up")) {
+                        return true;
+                    }
+                }
+            } else if (direction.equals("down")) {
+                // Traverse to children and parents if current node is not in the evidence and direction is down
+                for (String child : children) {
+                    if (traverseBayesBall(child, target, evidence, "up")) {
                         return true;
                     }
                 }
                 for (String parent : parents) {
-                    if (canReach(parent, target, evidence, visited, "down", current)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        else if (direction.equals("up")) {
-            if (!evidence.contains(current)) {
-                for (String child : children) {
-                    if (canReach(child, target, evidence, visited, "down", current)) {
-                        return true;
-                    }
-                }
-            }
-            else if (evidence.contains(current)) {
-                for (String parent : parents) {
-                    if (!cameFrom.equals(current) && canReach(parent, target, evidence, visited, "down", current)) {
+                    if (traverseBayesBall(parent, target, evidence, "down")) {
                         return true;
                     }
                 }
