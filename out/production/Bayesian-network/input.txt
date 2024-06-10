@@ -1,1 +1,2 @@
-D-L|S=T
+B0-C2|A2=T,A3=T
+A1-D1|C3=T,B2=F,B3=F
