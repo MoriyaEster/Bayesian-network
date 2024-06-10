@@ -31,10 +31,8 @@ public class BayesBall {
         List<String> parents = getParents(current);
         List<String> children = getChildren(current);
 
-        if (visited.contains(current) && children.stream().anyMatch(visited::contains) && parents.stream().anyMatch(visited::contains)) {
-            return false;
-        }
-        visited.add(current);
+        if (visited.contains(current + direction)) return false;
+        visited.add(current + direction);
 
         if (current.equals(target)) {
             System.out.println("Reached target: " + target);
@@ -54,7 +52,8 @@ public class BayesBall {
                         return true;
                     }
                 }
-            } else if (direction.equals("up")) {
+            }
+            else if (direction.equals("up")) {
                 // Traverse to children if current node is not in the evidence and direction is up
                 for (String child : children) {
                     if (traverseBayesBall(child, target, evidence, "up")) {
@@ -63,10 +62,12 @@ public class BayesBall {
                 }
             }
         } else {
+            // Stop descending if current node is in the evidence and direction is down
             if (direction.equals("down")) {
-                return false; // Stop descending if current node is in the evidence and direction is down
-            } else if (direction.equals("up")) {
-                // Traverse to parents if current node is in the evidence and direction is up
+                return false;
+            }
+            // Traverse to parents if current node is in the evidence and direction is up
+            else if (direction.equals("up")) {
                 for (String parent : parents) {
                     if (!current.equals(parent) && traverseBayesBall(parent, target, evidence, "down")) {
                         return true;
@@ -74,7 +75,6 @@ public class BayesBall {
                 }
             }
         }
-
         return false;
     }
 

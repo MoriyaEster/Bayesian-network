@@ -8,7 +8,7 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
         // Parse the XML to create the Bayesian Network
-        BayesianNetwork network = XMLParser.parseXML("src/net3.xml");
+        BayesianNetwork network = XMLParser.parseXML("src/alarm_net.xml");
 
         // Read input from input.txt and write output to output.txt
         try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
