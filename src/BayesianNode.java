@@ -1,10 +1,12 @@
 import java.util.List;
+import java.util.Map;
 
 public class BayesianNode {
     private String name;
     private List<String> outcomes;
     private List<String> given;
     private boolean visited;
+    private Map<List<Boolean>, Double> cpt; // New field for CPT
 
     public BayesianNode(String name, List<String> outcomes, List<String> given) {
         this.name = name;
@@ -44,5 +46,13 @@ public class BayesianNode {
 
     public void setVisited(boolean visited) {
         this.visited = visited;
+    }
+
+    public Map<List<Boolean>, Double> getCPT() {
+        return cpt;
+    }
+
+    public void setCPT(Map<List<Boolean>, Double> cpt) {
+        this.cpt = cpt;
     }
 }
