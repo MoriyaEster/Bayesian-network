@@ -16,9 +16,6 @@ public class Factor implements Comparable<Factor> {
 
     // Get the probability value for a given combination of variable outcomes
     public Double getProbability(List<Boolean> outcomes) {
-        if (outcomes.size() != variables.size()) {
-            throw new IllegalArgumentException("Outcomes size must match the number of variables.");
-        }
         return table.getOrDefault(outcomes, 0.0);
     }
 

@@ -4,7 +4,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input6.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -70,11 +70,13 @@ public class Main {
                 return; // Skip invalid lines
             }
 
+            // Extract the query part and the path part
             String queryPart = parts[0].substring(2); // Remove "P("
             String[] queryEvidenceParts = queryPart.split("\\|");
             String queryVar = queryEvidenceParts[0].trim();
             Map<String, Boolean> evidence = new HashMap<>();
 
+            // Extract evidence if it exists
             if (queryEvidenceParts.length > 1) {
                 String evidencePart = queryEvidenceParts[1].trim();
                 String[] evidenceVariables = evidencePart.split(",");
@@ -86,6 +88,7 @@ public class Main {
                 }
             }
 
+            // Extract the path
             String path = parts[1].trim();
             String[] pathNodes = path.split("-");
             if (pathNodes.length < 2) {
@@ -94,18 +97,19 @@ public class Main {
 
             String startNode = pathNodes[0].trim();
             String endNode = pathNodes[1].trim();
-            List<String> queryList = Arrays.asList(startNode, endNode);
-            List<String> hiddenVariables = new ArrayList<>();
+            List<String> hiddenVariables = Arrays.asList(startNode, endNode);
+            List<String> queryList = new ArrayList<>();
 
             // Identify hidden variables
             for (BayesianNode node : network.getNodes()) {
                 String nodeName = node.getName();
-                if (!evidence.containsKey(nodeName) && !queryList.contains(nodeName)) {
-                    hiddenVariables.add(nodeName);
+                if (!evidence.containsKey(nodeName) && !hiddenVariables.contains(nodeName)) {
+                    queryList.add(nodeName);
                 }
             }
 
             // Run the variable elimination algorithm
+            System.out.println("evidence = " + evidence + "queryList = " + queryList + "hiddenVariables = "+ hiddenVariables);
             VariableElimination ve = new VariableElimination(network, evidence, queryList, hiddenVariables);
             double result = ve.run();
 
