@@ -51,12 +51,21 @@ public class XMLParser {
 
                     NodeList tableNodes = eElement.getElementsByTagName("TABLE");
                     String[] tableValues = tableNodes.item(0).getTextContent().trim().split("\\s+");
-                    List<List<Boolean>> combinations = generateCombinations(given.size() + 1);
-                    Map<List<Boolean>, Double> cpt = new HashMap<>();
+                    Map<List<Boolean>, Double> cpt = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
 
-                    for (int i = 0; i < combinations.size(); i++) {
-                        cpt.put(combinations.get(i), Double.parseDouble(tableValues[i]));
+                    int numGiven = given.size();
+                    int numOutcomes = node.getOutcomes().size();
+                    List<List<Boolean>> combinations = generateCombinations(numGiven);
+
+                    int index = 0;
+                    for (List<Boolean> combination : combinations) {
+                        for (int outcomeIndex = 0; outcomeIndex < numOutcomes; outcomeIndex++) {
+                            List<Boolean> key = new ArrayList<>(combination);
+                            key.add(outcomeIndex == 0); // Add true/false for the node's outcome
+                            cpt.put(key, Double.parseDouble(tableValues[index++]));
+                        }
                     }
+                    System.out.println("cpt = "+ cpt);
                     node.setCPT(cpt);
                 }
             }
@@ -71,8 +80,8 @@ public class XMLParser {
         int size = (int) Math.pow(2, n);
         for (int i = 0; i < size; i++) {
             List<Boolean> combination = new ArrayList<>();
-            for (int j = n - 1; j >= 0; j--) {
-                combination.add((i / (1 << j)) % 2 == 1);
+            for (int j = 0; j < n; j++) {
+                combination.add((i & (1 << j)) != 0);
             }
             combinations.add(combination);
         }
