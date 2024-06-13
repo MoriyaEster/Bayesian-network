@@ -4,7 +4,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input3.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -64,7 +64,7 @@ public class Main {
 
     private static void processVEQuery(String query, BayesianNetwork network, BufferedWriter bw) {
         try {
-            // Example input: P(B=T|J=T,M=T) A-E
+            // Example input: P(M=Y|N=T,S=good,F=nice) A-E
             String[] parts = query.split("\\) ");
             if (parts.length != 2) {
                 return; // Skip invalid lines
@@ -79,23 +79,23 @@ public class Main {
 
             // Extract the query variable and its outcome
             String[] queryVariableParts = queryVarPart.split(",");
-            Map<String, Boolean> queryVariables = new HashMap<>();
+            Map<String, String> queryVariables = new HashMap<>();
             for (String qv : queryVariableParts) {
                 String[] qvParts = qv.split("=");
                 if (qvParts.length == 2) {
-                    queryVariables.put(qvParts[0].trim(), qvParts[1].trim().equals("T"));
+                    queryVariables.put(qvParts[0].trim(), qvParts[1].trim());
                 }
             }
 
             // Extract evidence if it exists
-            Map<String, Boolean> evidence = new HashMap<>();
+            Map<String, String> evidence = new HashMap<>();
             if (queryEvidenceParts.length > 1) {
                 String evidencePart = queryEvidenceParts[1].trim();
                 String[] evidenceVariables = evidencePart.split(",");
                 for (String ev : evidenceVariables) {
                     String[] evParts = ev.split("=");
                     if (evParts.length == 2) {
-                        evidence.put(evParts[0].trim(), evParts[1].trim().equals("T"));
+                        evidence.put(evParts[0].trim(), evParts[1].trim());
                     }
                 }
             }
@@ -125,7 +125,7 @@ public class Main {
             double result = ve.run();
 
             // Write the result to the output file
-            bw.write(String.format("%.5f,%d,%d", result, hiddenVariables.size(), ve.getMultiplicationCount()));
+            bw.write(String.format("%.5f,%d,%d", result, ve.getAdditionCount(), ve.getMultiplicationCount()));
             bw.newLine();
         } catch (IOException e) {
             e.printStackTrace();

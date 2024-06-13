@@ -17,6 +17,7 @@ public class XMLParser {
 
             NodeList variableList = doc.getElementsByTagName("VARIABLE");
             Map<String, BayesianNode> nodeMap = new HashMap<>();
+            Map<String, List<String>> outcomeMap = new HashMap<>(); // To store outcomes for each variable
 
             for (int temp = 0; temp < variableList.getLength(); temp++) {
                 Node nNode = variableList.item(temp);
@@ -31,6 +32,7 @@ public class XMLParser {
                     BayesianNode node = new BayesianNode(name, outcomes, new ArrayList<>());
                     network.addNode(node);
                     nodeMap.put(name, node);
+                    outcomeMap.put(name, outcomes); // Store outcomes for the variable
                 }
             }
 
@@ -51,12 +53,19 @@ public class XMLParser {
 
                     NodeList tableNodes = eElement.getElementsByTagName("TABLE");
                     String[] tableValues = tableNodes.item(0).getTextContent().trim().split("\\s+");
-                    Map<List<Boolean>, Double> cpt = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
+                    Map<List<String>, Double> cpt = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
 
-                    List<List<Boolean>> combinations = generateOrderedCombinations(given.size() + 1); // +1 for the node itself
+                    // Collect all outcomes for the given variables and the current node
+                    List<List<String>> givenOutcomes = new ArrayList<>();
+                    for (String givenVar : given) {
+                        givenOutcomes.add(outcomeMap.get(givenVar));
+                    }
+                    givenOutcomes.add(outcomeMap.get(name)); // Add outcomes for the current node
+
+                    List<List<String>> combinations = generateOrderedCombinations(givenOutcomes);
 
                     int index = 0;
-                    for (List<Boolean> combination : combinations) {
+                    for (List<String> combination : combinations) {
                         cpt.put(combination, Double.parseDouble(tableValues[index++]));
                     }
                     node.setCPT(cpt);
@@ -69,24 +78,22 @@ public class XMLParser {
         return network;
     }
 
-    private static List<List<Boolean>> generateOrderedCombinations(int n) {
-        List<List<Boolean>> combinations = new ArrayList<>();
-        generateCombinationsHelper(combinations, new Boolean[n], 0);
+    private static List<List<String>> generateOrderedCombinations(List<List<String>> givenOutcomes) {
+        List<List<String>> combinations = new ArrayList<>();
+        generateCombinationsHelper(combinations, givenOutcomes, new ArrayList<>(), 0);
         return combinations;
     }
 
-    private static void generateCombinationsHelper(List<List<Boolean>> combinations, Boolean[] current, int index) {
-        if (index == current.length) {
-            combinations.add(new ArrayList<>(Arrays.asList(current)));
+    private static void generateCombinationsHelper(List<List<String>> combinations, List<List<String>> givenOutcomes, List<String> current, int index) {
+        if (index == givenOutcomes.size()) {
+            combinations.add(new ArrayList<>(current));
             return;
         }
 
-        // Generate with current index as true
-        current[index] = true;
-        generateCombinationsHelper(combinations, current, index + 1);
-
-        // Generate with current index as false
-        current[index] = false;
-        generateCombinationsHelper(combinations, current, index + 1);
+        for (String outcome : givenOutcomes.get(index)) {
+            current.add(outcome);
+            generateCombinationsHelper(combinations, givenOutcomes, current, index + 1);
+            current.remove(current.size() - 1);
+        }
     }
 }

@@ -2,7 +2,7 @@ import java.util.*;
 
 public class Factor implements Comparable<Factor> {
     private List<String> variables;
-    private Map<List<Boolean>, Double> table;
+    private Map<List<String>, Double> table;
 
     public Factor(List<String> variables) {
         this.variables = new ArrayList<>(variables);
@@ -10,12 +10,12 @@ public class Factor implements Comparable<Factor> {
     }
 
     // Set the probability value for a given combination of variable outcomes
-    public void setProbability(List<Boolean> outcomes, Double probability) {
+    public void setProbability(List<String> outcomes, Double probability) {
         table.put(new ArrayList<>(outcomes), probability);
     }
 
     // Get the probability value for a given combination of variable outcomes
-    public Double getProbability(List<Boolean> outcomes) {
+    public Double getProbability(List<String> outcomes) {
         Double probability = table.get(outcomes);
         if (probability == null) {
             System.err.println("No matching entry for outcomes: " + outcomes);
@@ -30,7 +30,7 @@ public class Factor implements Comparable<Factor> {
         return variables;
     }
 
-    public Map<List<Boolean>, Double> getTable() {
+    public Map<List<String>, Double> getTable() {
         return table;
     }
 
@@ -40,7 +40,7 @@ public class Factor implements Comparable<Factor> {
         for (double value : table.values()) {
             sum += value;
         }
-        for (Map.Entry<List<Boolean>, Double> entry : table.entrySet()) {
+        for (Map.Entry<List<String>, Double> entry : table.entrySet()) {
             table.put(entry.getKey(), entry.getValue() / sum);
         }
     }

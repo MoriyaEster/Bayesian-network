@@ -5,14 +5,12 @@ public class BayesianNode {
     private String name;
     private List<String> outcomes;
     private List<String> given;
-    private boolean visited;
-    private Map<List<Boolean>, Double> cpt; // New field for CPT
+    private Map<List<String>, Double> cpt; // New field for CPT
 
     public BayesianNode(String name, List<String> outcomes, List<String> given) {
         this.name = name;
         this.outcomes = outcomes;
         this.given = given;
-        this.visited = false;
     }
 
     // Getters and Setters
@@ -40,19 +38,11 @@ public class BayesianNode {
         this.given = given;
     }
 
-    public boolean isVisited() {
-        return visited;
-    }
-
-    public void setVisited(boolean visited) {
-        this.visited = visited;
-    }
-
-    public Map<List<Boolean>, Double> getCPT() {
+    public Map<List<String>, Double> getCPT() {
         return cpt;
     }
 
-    public void setCPT(Map<List<Boolean>, Double> cpt) {
+    public void setCPT(Map<List<String>, Double> cpt) {
         this.cpt = cpt;
     }
 }

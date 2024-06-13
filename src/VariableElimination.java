@@ -2,14 +2,14 @@ import java.util.*;
 
 public class VariableElimination {
     private BayesianNetwork network;
-    private Map<String, Boolean> evidence;
-    private List<String> queryVariables;
+    private Map<String, String> evidence;
+    private Map<String, String> queryVariables;
     private List<String> hiddenVariables;
     private List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
 
-    public VariableElimination(BayesianNetwork network, Map<String, Boolean> evidence, List<String> queryVariables, List<String> hiddenVariables) {
+    public VariableElimination(BayesianNetwork network, Map<String, String> evidence, Map<String, String> queryVariables, List<String> hiddenVariables) {
         this.network = network;
         this.evidence = evidence;
         this.queryVariables = queryVariables;
@@ -33,8 +33,8 @@ public class VariableElimination {
     }
 
     private void populateFactor(Factor factor, BayesianNode node) {
-        Map<List<Boolean>, Double> cpt = node.getCPT();
-        for (Map.Entry<List<Boolean>, Double> entry : cpt.entrySet()) {
+        Map<List<String>, Double> cpt = node.getCPT();
+        for (Map.Entry<List<String>, Double> entry : cpt.entrySet()) {
             factor.setProbability(entry.getKey(), entry.getValue());
         }
     }
@@ -42,7 +42,7 @@ public class VariableElimination {
     // Apply evidence to the factors
     private void applyEvidence() {
         for (Factor factor : factors) {
-            for (Map.Entry<String, Boolean> entry : evidence.entrySet()) {
+            for (Map.Entry<String, String> entry : evidence.entrySet()) {
                 if (factor.getVariables().contains(entry.getKey())) {
                     reduceFactor(factor, entry.getKey(), entry.getValue());
                 }
@@ -51,12 +51,12 @@ public class VariableElimination {
     }
 
     // Reduce factor based on evidence
-    private void reduceFactor(Factor factor, String variable, Boolean value) {
-        Map<List<Boolean>, Double> newTable = new HashMap<>();
+    private void reduceFactor(Factor factor, String variable, String value) {
+        Map<List<String>, Double> newTable = new HashMap<>();
         int index = factor.getVariables().indexOf(variable);
-        for (Map.Entry<List<Boolean>, Double> entry : factor.getTable().entrySet()) {
+        for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
             if (entry.getKey().get(index).equals(value)) {
-                List<Boolean> newOutcomes = new ArrayList<>(entry.getKey());
+                List<String> newOutcomes = new ArrayList<>(entry.getKey());
                 newOutcomes.remove(index);
                 newTable.put(newOutcomes, entry.getValue());
             }
@@ -71,7 +71,6 @@ public class VariableElimination {
         System.out.println("Initial Factors:");
         printFactors();
 
-        int connections = 0;
         for (String hidden : hiddenVariables) {
             List<Factor> factorsWithHidden = new ArrayList<>();
             for (Factor factor : factors) {
@@ -80,8 +79,15 @@ public class VariableElimination {
                 }
             }
 
-            connections += factorsWithHidden.size();
-            Factor joinedFactor = joinFactors(factorsWithHidden);
+            // Sort the factors by size before joining them
+            Collections.sort(factorsWithHidden);
+
+            // Ensure correct order of joining factors
+            Factor joinedFactor = factorsWithHidden.get(0);
+            for (int i = 1; i < factorsWithHidden.size(); i++) {
+                joinedFactor = multiply(joinedFactor, factorsWithHidden.get(i));
+            }
+
             Factor reducedFactor = eliminateVariable(joinedFactor, hidden);
 
             factors.removeAll(factorsWithHidden);
@@ -96,7 +102,7 @@ public class VariableElimination {
 
         // Extract the probability for the query variable from the final factor
         double result = finalFactor.getProbability(getQueryOutcomes());
-        System.out.printf("Probability: %.5f, Connections: %d, Multiplications: %d, Additions: %d%n", result, connections, multiplicationCount, additionCount);
+        System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
         return result;
     }
 
@@ -105,7 +111,6 @@ public class VariableElimination {
         Factor result = factorsToJoin.get(0);
         for (int i = 1; i < factorsToJoin.size(); i++) {
             result = multiply(result, factorsToJoin.get(i));
-            multiplicationCount++;
         }
         return result;
     }
@@ -125,10 +130,10 @@ public class VariableElimination {
         return result;
     }
 
-    private void generateOutcomes(int size, List<Boolean> currentOutcomes, Factor result, Factor f1, Factor f2) {
+    private void generateOutcomes(int size, List<String> currentOutcomes, Factor result, Factor f1, Factor f2) {
         if (currentOutcomes.size() == size) {
-            List<Boolean> f1Outcomes = new ArrayList<>();
-            List<Boolean> f2Outcomes = new ArrayList<>();
+            List<String> f1Outcomes = new ArrayList<>();
+            List<String> f2Outcomes = new ArrayList<>();
 
             for (String var : f1.getVariables()) {
                 int index = result.getVariables().indexOf(var);
@@ -141,15 +146,25 @@ public class VariableElimination {
             }
 
             double probability = f1.getProbability(f1Outcomes) * f2.getProbability(f2Outcomes);
+            multiplicationCount++; // Increment multiplication count
             result.setProbability(currentOutcomes, probability);
             return;
         }
 
-        for (Boolean outcome : Arrays.asList(true, false)) {
+        for (String outcome : getPossibleOutcomes(size, currentOutcomes.size())) {
             currentOutcomes.add(outcome);
             generateOutcomes(size, currentOutcomes, result, f1, f2);
             currentOutcomes.remove(currentOutcomes.size() - 1);
         }
+    }
+
+    // Helper method to generate possible outcomes for a variable
+    private List<String> getPossibleOutcomes(int totalSize, int currentSize) {
+        List<String> outcomes = new ArrayList<>();
+        // Assuming the possible outcomes are "T" and "F" for simplicity, update this based on your actual outcomes
+        outcomes.add("T");
+        outcomes.add("F");
+        return outcomes;
     }
 
     // Eliminate a variable from a factor
@@ -162,15 +177,15 @@ public class VariableElimination {
         newVariables.remove(index);
 
         Factor result = new Factor(newVariables);
-        Map<List<Boolean>, Double> newTable = new HashMap<>();
+        Map<List<String>, Double> newTable = new HashMap<>();
 
-        for (Map.Entry<List<Boolean>, Double> entry : factor.getTable().entrySet()) {
-            List<Boolean> outcomes = new ArrayList<>(entry.getKey());
+        for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
+            List<String> outcomes = new ArrayList<>(entry.getKey());
             outcomes.remove(index);
 
             newTable.putIfAbsent(outcomes, 0.0);
             newTable.put(outcomes, newTable.get(outcomes) + entry.getValue());
-            additionCount++;
+            additionCount++; // Increment addition count
         }
 
         result.getTable().putAll(newTable);
@@ -183,11 +198,16 @@ public class VariableElimination {
     }
 
     // Get the outcomes for the query variables
-    private List<Boolean> getQueryOutcomes() {
-        List<Boolean> outcomes = new ArrayList<>();
-        for (String var : queryVariables) {
-            outcomes.add(evidence.get(var));
+    private List<String> getQueryOutcomes() {
+        List<String> outcomes = new ArrayList<>();
+        for (String var : queryVariables.keySet()) {
+            String outcome = queryVariables.get(var); // Get the outcome from the query variables map
+            if (outcome == null) {
+                System.err.println("Evidence missing for variable: " + var);
+            }
+            outcomes.add(outcome);
         }
+        System.out.println("Generated Query Outcomes: " + outcomes);
         return outcomes;
     }
 
@@ -211,7 +231,7 @@ public class VariableElimination {
     // Print a single factor for debugging
     private void printFactor(Factor factor) {
         System.out.println("Variables: " + factor.getVariables());
-        for (Map.Entry<List<Boolean>, Double> entry : factor.getTable().entrySet()) {
+        for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
             System.out.println("Outcomes: " + entry.getKey() + " -> Probability: " + entry.getValue());
         }
     }
