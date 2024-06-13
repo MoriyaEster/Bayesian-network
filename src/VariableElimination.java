@@ -8,6 +8,8 @@ public class VariableElimination {
     private List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
+    private boolean flagNoCalculating = false;
+
 
     public VariableElimination(BayesianNetwork network, Map<String, String> evidence, Map<String, String> queryVariables, List<String> hiddenVariables) {
         this.network = network;
@@ -42,6 +44,15 @@ public class VariableElimination {
     // Apply evidence to the factors
     private void applyEvidence() {
         for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(queryVariables.keySet())
+                    && factor.getVariables().containsAll(evidence.keySet())
+                    && factor.getVariables().size() == (evidence.size() + queryVariables.size())) {
+                printFactor(factor);
+                flagNoCalculating = true;
+                break;
+            }
+        }
+        for (Factor factor : factors) {
             for (Map.Entry<String, String> entry : evidence.entrySet()) {
                 if (factor.getVariables().contains(entry.getKey())) {
                     reduceFactor(factor, entry.getKey(), entry.getValue());
@@ -66,28 +77,16 @@ public class VariableElimination {
         factor.getTable().putAll(newTable);
     }
 
-    // Find the factor that contains all query variables
-    private Factor getFactorForQuery() {
-        for (Factor factor : factors) {
-            if (factor.getVariables().containsAll(queryVariables.keySet())) {
-                return factor;
-            }
-        }
-        throw new RuntimeException("No relevant factor found containing all query variables.");
-    }
-
     // Perform the variable elimination algorithm
     public double run() {
-        if (hiddenVariables.isEmpty()) {
-            printFactors();
-            // Get the factor that contains all the query variables
-            Factor relevantFactor = getFactorForQuery();
-            // Directly return the probability for the query outcomes from the identified factor
-            double result = relevantFactor.getProbability(getQueryOutcomes());
-            System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
-            return result;
+        for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(queryVariables.keySet()) && flagNoCalculating) {
+                System.out.println("flagNoCalculating = " + flagNoCalculating);
+                double result = factor.getProbability(getQueryOutcomes());
+                System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
+                return result;
+            }
         }
-
         System.out.println("Initial Factors:");
         printFactors();
 

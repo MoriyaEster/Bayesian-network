@@ -69,7 +69,6 @@ public class XMLParser {
                         cpt.put(combination, Double.parseDouble(tableValues[index++]));
                     }
                     node.setCPT(cpt);
-                    System.out.println("cpt = " + cpt);
                 }
             }
         } catch (Exception e) {

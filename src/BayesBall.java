@@ -32,7 +32,6 @@ public class BayesBall {
                 parents.addAll(node.getGiven());
             }
         }
-        System.out.println("Parents of " + nodeName + ": " + parents);
         return parents;
     }
 
@@ -43,15 +42,11 @@ public class BayesBall {
                 children.add(node.getName());
             }
         }
-        System.out.println("Children of " + nodeName + ": " + children);
         return children;
     }
 
     private boolean travelBayesBall(String current, String target, Set<String> evidence, String direction) {
-        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
-
         if (current.equals(target)) {
-            System.out.println("Reached target: " + target);
             return true;
         }
 
