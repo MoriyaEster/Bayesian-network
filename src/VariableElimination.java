@@ -8,7 +8,6 @@ public class VariableElimination {
     private List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
-    private boolean flagNoCalculating = false;
 
     public VariableElimination(BayesianNetwork network, Map<String, String> evidence, Map<String, String> queryVariables, List<String> hiddenVariables) {
         this.network = network;
@@ -20,8 +19,6 @@ public class VariableElimination {
         this.additionCount = 0;
         initializeFactors();
         applyEvidence();
-
-
     }
 
     // Initialize factors from the Bayesian network
@@ -45,11 +42,6 @@ public class VariableElimination {
     // Apply evidence to the factors
     private void applyEvidence() {
         for (Factor factor : factors) {
-            if (factor.getVariables().containsAll(queryVariables.keySet()) && factor.getVariables().containsAll(evidence.keySet())) {
-                flagNoCalculating = true;
-            }
-        }
-        for (Factor factor : factors) {
             for (Map.Entry<String, String> entry : evidence.entrySet()) {
                 if (factor.getVariables().contains(entry.getKey())) {
                     reduceFactor(factor, entry.getKey(), entry.getValue());
@@ -72,17 +64,28 @@ public class VariableElimination {
         factor.getVariables().remove(variable);
         factor.getTable().clear();
         factor.getTable().putAll(newTable);
+    }
 
+    // Find the factor that contains all query variables
+    private Factor getFactorForQuery() {
+        for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(queryVariables.keySet())) {
+                return factor;
+            }
+        }
+        throw new RuntimeException("No relevant factor found containing all query variables.");
     }
 
     // Perform the variable elimination algorithm
     public double run() {
-        for (Factor factor : factors) {
-            if (factor.getVariables().containsAll(queryVariables.keySet()) && flagNoCalculating) {
-                double result = factor.getProbability(getQueryOutcomes());
-                System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
-                return result;
-            }
+        if (hiddenVariables.isEmpty()) {
+            printFactors();
+            // Get the factor that contains all the query variables
+            Factor relevantFactor = getFactorForQuery();
+            // Directly return the probability for the query outcomes from the identified factor
+            double result = relevantFactor.getProbability(getQueryOutcomes());
+            System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
+            return result;
         }
 
         System.out.println("Initial Factors:");
@@ -121,6 +124,20 @@ public class VariableElimination {
         double result = finalFactor.getProbability(getQueryOutcomes());
         System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
         return result;
+    }
+
+    // Get the outcomes for the query variables
+    private List<String> getQueryOutcomes() {
+        List<String> outcomes = new ArrayList<>();
+        for (String var : queryVariables.keySet()) {
+            String outcome = queryVariables.get(var); // Get the outcome from the query variables map
+            if (outcome == null) {
+                System.err.println("Outcome missing for variable: " + var);
+            }
+            outcomes.add(outcome);
+        }
+        System.out.println("Generated Query Outcomes: " + outcomes);
+        return outcomes;
     }
 
     // Join a list of factors
@@ -168,7 +185,8 @@ public class VariableElimination {
             return;
         }
 
-        for (String outcome : getPossibleOutcomes(size, currentOutcomes.size())) {
+        String currentVariable = result.getVariables().get(currentOutcomes.size());
+        for (String outcome : getPossibleOutcomes(currentVariable)) {
             currentOutcomes.add(outcome);
             generateOutcomes(size, currentOutcomes, result, f1, f2);
             currentOutcomes.remove(currentOutcomes.size() - 1);
@@ -176,12 +194,13 @@ public class VariableElimination {
     }
 
     // Helper method to generate possible outcomes for a variable
-    private List<String> getPossibleOutcomes(int totalSize, int currentSize) {
-        List<String> outcomes = new ArrayList<>();
-        // Assuming the possible outcomes are "T" and "F" for simplicity, update this based on your actual outcomes
-        outcomes.add("T");
-        outcomes.add("F");
-        return outcomes;
+    private List<String> getPossibleOutcomes(String variable) {
+        for (BayesianNode node : network.getNodes()) {
+            if (node.getName().equals(variable)) {
+                return node.getOutcomes();
+            }
+        }
+        throw new RuntimeException("No outcomes found for variable: " + variable);
     }
 
     // Eliminate a variable from a factor
@@ -212,20 +231,6 @@ public class VariableElimination {
     // Normalize the final factor
     private void normalize(Factor factor) {
         factor.normalize();
-    }
-
-    // Get the outcomes for the query variables
-    private List<String> getQueryOutcomes() {
-        List<String> outcomes = new ArrayList<>();
-        for (String var : queryVariables.keySet()) {
-            String outcome = queryVariables.get(var); // Get the outcome from the query variables map
-            if (outcome == null) {
-                System.err.println("Evidence missing for variable: " + var);
-            }
-            outcomes.add(outcome);
-        }
-        System.out.println("Generated Query Outcomes: " + outcomes);
-        return outcomes;
     }
 
     // Get the multiplication count
