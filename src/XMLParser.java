@@ -53,20 +53,14 @@ public class XMLParser {
                     String[] tableValues = tableNodes.item(0).getTextContent().trim().split("\\s+");
                     Map<List<Boolean>, Double> cpt = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
 
-                    int numGiven = given.size();
-                    int numOutcomes = node.getOutcomes().size();
-                    List<List<Boolean>> combinations = generateCombinations(numGiven);
+                    List<List<Boolean>> combinations = generateOrderedCombinations(given.size() + 1); // +1 for the node itself
 
                     int index = 0;
                     for (List<Boolean> combination : combinations) {
-                        for (int outcomeIndex = 0; outcomeIndex < numOutcomes; outcomeIndex++) {
-                            List<Boolean> key = new ArrayList<>(combination);
-                            key.add(outcomeIndex == 0); // Add true/false for the node's outcome
-                            cpt.put(key, Double.parseDouble(tableValues[index++]));
-                        }
+                        cpt.put(combination, Double.parseDouble(tableValues[index++]));
                     }
-                    System.out.println("cpt = "+ cpt);
                     node.setCPT(cpt);
+                    System.out.println("cpt = " + cpt);
                 }
             }
         } catch (Exception e) {
@@ -75,16 +69,24 @@ public class XMLParser {
         return network;
     }
 
-    private static List<List<Boolean>> generateCombinations(int n) {
+    private static List<List<Boolean>> generateOrderedCombinations(int n) {
         List<List<Boolean>> combinations = new ArrayList<>();
-        int size = (int) Math.pow(2, n);
-        for (int i = 0; i < size; i++) {
-            List<Boolean> combination = new ArrayList<>();
-            for (int j = 0; j < n; j++) {
-                combination.add((i & (1 << j)) != 0);
-            }
-            combinations.add(combination);
-        }
+        generateCombinationsHelper(combinations, new Boolean[n], 0);
         return combinations;
+    }
+
+    private static void generateCombinationsHelper(List<List<Boolean>> combinations, Boolean[] current, int index) {
+        if (index == current.length) {
+            combinations.add(new ArrayList<>(Arrays.asList(current)));
+            return;
+        }
+
+        // Generate with current index as true
+        current[index] = true;
+        generateCombinationsHelper(combinations, current, index + 1);
+
+        // Generate with current index as false
+        current[index] = false;
+        generateCombinationsHelper(combinations, current, index + 1);
     }
 }
