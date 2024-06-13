@@ -16,6 +16,7 @@ public class Factor implements Comparable<Factor> {
 
     // Get the probability value for a given combination of variable outcomes
     public Double getProbability(List<String> outcomes) {
+        System.out.println("outcomes = " + outcomes);
         Double probability = table.get(outcomes);
         if (probability == null) {
             System.err.println("No matching entry for outcomes: " + outcomes);

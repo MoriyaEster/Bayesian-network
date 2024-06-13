@@ -4,7 +4,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input3.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -65,10 +65,10 @@ public class Main {
     private static void processVEQuery(String query, BayesianNetwork network, BufferedWriter bw) {
         try {
             // Example input: P(M=Y|N=T,S=good,F=nice) A-E
-            String[] parts = query.split("\\) ");
-            if (parts.length != 2) {
-                return; // Skip invalid lines
-            }
+            String[] parts = query.split("\\)");
+
+            // Handle case without hidden variables
+            String path = parts.length == 2 ? parts[1].trim() : "";
 
             // Extract the whole_query part and the path part
             String whole_query = parts[0].substring(2); // Remove "P("
@@ -100,16 +100,16 @@ public class Main {
                 }
             }
 
-            // Extract the path
-            String path = parts[1].trim();
-            String[] pathNodes = path.split("-");
-            if (pathNodes.length < 2) {
-                return; // Skip invalid paths
+            List<String> hiddenVariables = new ArrayList<>();
+            if (!path.isEmpty()) {
+                String[] pathNodes = path.split("-");
+                if (pathNodes.length == 2) {
+                    String startNode = pathNodes[0].trim();
+                    String endNode = pathNodes[1].trim();
+                    hiddenVariables.add(startNode);
+                    hiddenVariables.add(endNode);
+                }
             }
-
-            String startNode = pathNodes[0].trim();
-            String endNode = pathNodes[1].trim();
-            List<String> hiddenVariables = new ArrayList<>(Arrays.asList(startNode, endNode));
 
             // Identify hidden variables
             for (BayesianNode node : network.getNodes()) {

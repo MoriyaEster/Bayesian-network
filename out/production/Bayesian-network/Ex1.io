@@ -125,7 +125,7 @@ net9.xml
 S-R|
 P(S=T|C=F) R-W
 P(S=T|C=F,W=F) R
-P(S=T|W=T) R-W
+P(S=T|W=T) R-C
 P(R=F|S=T,W=F) C
 END_INPUT
 no

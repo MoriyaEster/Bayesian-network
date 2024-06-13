@@ -8,6 +8,7 @@ public class VariableElimination {
     private List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
+    private boolean flagNoCalculating = false;
 
     public VariableElimination(BayesianNetwork network, Map<String, String> evidence, Map<String, String> queryVariables, List<String> hiddenVariables) {
         this.network = network;
@@ -19,6 +20,8 @@ public class VariableElimination {
         this.additionCount = 0;
         initializeFactors();
         applyEvidence();
+
+
     }
 
     // Initialize factors from the Bayesian network
@@ -42,6 +45,11 @@ public class VariableElimination {
     // Apply evidence to the factors
     private void applyEvidence() {
         for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(queryVariables.keySet()) && factor.getVariables().containsAll(evidence.keySet())) {
+                flagNoCalculating = true;
+            }
+        }
+        for (Factor factor : factors) {
             for (Map.Entry<String, String> entry : evidence.entrySet()) {
                 if (factor.getVariables().contains(entry.getKey())) {
                     reduceFactor(factor, entry.getKey(), entry.getValue());
@@ -64,10 +72,19 @@ public class VariableElimination {
         factor.getVariables().remove(variable);
         factor.getTable().clear();
         factor.getTable().putAll(newTable);
+
     }
 
     // Perform the variable elimination algorithm
     public double run() {
+        for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(queryVariables.keySet()) && flagNoCalculating) {
+                double result = factor.getProbability(getQueryOutcomes());
+                System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
+                return result;
+            }
+        }
+
         System.out.println("Initial Factors:");
         printFactors();
 
