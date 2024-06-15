@@ -15,4 +15,13 @@ public class BayesianNetwork {
     public List<BayesianNode> getNodes() {
         return nodes;
     }
+
+    public BayesianNode getNode(String name) {
+        for (BayesianNode node : nodes) {
+            if (node.getName().equals(name)) {
+                return node;
+            }
+        }
+        return null;
+    }
 }
