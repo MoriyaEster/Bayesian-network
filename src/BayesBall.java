@@ -8,21 +8,10 @@ public class BayesBall {
         this.network = network;
     }
 
-    public boolean isConditionallyIndependent(String start, String end, Set<String> evidenceSet) {
-        Set<String> evidence = parseEvidence(evidenceSet);
+    public boolean areIndependent(String start, String end, Set<String> evidence) {
+        System.out.println("evidenceSet = "+evidence);
         visited.clear();
         return !travelBayesBall(start, end, evidence, "down");
-    }
-
-    private Set<String> parseEvidence(Set<String> evidenceSet) {
-        Set<String> evidenceNodes = new HashSet<>();
-        for (String ev : evidenceSet) {
-            String[] parts = ev.split("=");
-            if (parts.length == 2) {
-                evidenceNodes.add(parts[0].trim());
-            }
-        }
-        return evidenceNodes;
     }
 
     private List<String> getParents(String nodeName) {
@@ -32,6 +21,7 @@ public class BayesBall {
                 parents.addAll(node.getGiven());
             }
         }
+        System.out.println("Parents of " + nodeName + ": " + parents);
         return parents;
     }
 
@@ -42,11 +32,15 @@ public class BayesBall {
                 children.add(node.getName());
             }
         }
+        System.out.println("Children of " + nodeName + ": " + children);
         return children;
     }
 
     private boolean travelBayesBall(String current, String target, Set<String> evidence, String direction) {
+        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
+
         if (current.equals(target)) {
+            System.out.println("Reached target: " + target);
             return true;
         }
 

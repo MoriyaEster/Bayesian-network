@@ -19,7 +19,7 @@ public class VariableElimination {
         this.additionCount = 0;
         initializeFactors();
         applyEvidence();
-        removeIrrelevantFactors();
+        removeIrrelevantVariables();
     }
 
     // Initialize factors from the Bayesian network
@@ -67,61 +67,54 @@ public class VariableElimination {
         factor.getTable().putAll(newTable);
     }
 
-    // Remove irrelevant factors
-    private void removeIrrelevantFactors() {
+    // Remove irrelevant variables and factors
+    private void removeIrrelevantVariables() {
         BayesBall bayesBall = new BayesBall(network);
 
-        // Remove leaf nodes that are not query or evidence variables
-        Set<String> relevantVariables = new HashSet<>(queryVariables.keySet());
-        relevantVariables.addAll(evidence.keySet());
-
-        for (BayesianNode node : network.getNodes()) {
-            if (isLeafNode(node) && !relevantVariables.contains(node.getName())) {
-                factors.removeIf(factor -> factor.getVariables().contains(node.getName()));
-            }
-        }
-
-        // Remove variables that are not ancestors of query or evidence variables
-        hiddenVariables.removeIf(hidden -> !isAncestor(hidden, relevantVariables));
-
-        // Remove variables that are conditionally independent of the query variables given the evidence
-        Iterator<String> iterator = hiddenVariables.iterator();
-        while (iterator.hasNext()) {
-            String hidden = iterator.next();
-            for (String query : queryVariables.keySet()) {
-                if (bayesBall.isConditionallyIndependent(query, hidden, evidence.keySet())) {
-                    factors.removeIf(factor -> factor.getVariables().contains(hidden));
-                    iterator.remove();
-                    break;
-                }
+        for (int i = 0; i < hiddenVariables.size(); ) {
+            String currentVar = hiddenVariables.get(i);
+            System.out.println("evidence.keySet = " + evidence.keySet());
+            if (!isAncestor(currentVar, queryVariables.keySet(), evidence.keySet(), network) || bayesBall.areIndependent(currentVar, queryVariables.keySet().iterator().next(), evidence.keySet())) {
+                if(bayesBall.areIndependent(currentVar, queryVariables.keySet().iterator().next(), evidence.keySet())) System.out.println("var to remove because BB = " + hiddenVariables.get(i));
+                System.out.println("var to remove = " + hiddenVariables.get(i));
+                hiddenVariables.remove(i);
+                factors.removeIf(factor -> factor.getVariables().contains(currentVar));
+            } else {
+                i++;
             }
         }
     }
 
-    // Check if a node is a leaf node
-    private boolean isLeafNode(BayesianNode node) {
-        return network.getNodes().stream().noneMatch(n -> n.getGiven().contains(node.getName()));
-    }
-
-    // Check if a variable is an ancestor of any in the set
-    private boolean isAncestor(String variable, Set<String> relevantVariables) {
-        for (String relevant : relevantVariables) {
-            if (isAncestor(variable, relevant)) {
+    // Check if 'hidden' is an ancestor of any variable in 'targets' within the Bayesian network
+    private static boolean isAncestor(String hidden, Set<String> queryVars, Set<String> evidenceVars, BayesianNetwork bn) {
+        Set<String> targets = new HashSet<>(queryVars);
+        targets.addAll(evidenceVars);
+        for (String target : targets) {
+            if (isAncestorBFS(hidden, target, bn)) {
+                System.out.println("var isAncestor = " + hidden);
                 return true;
             }
         }
         return false;
     }
 
-    // Check if a variable is an ancestor of another variable
-    private boolean isAncestor(String ancestor, String descendant) {
-        if (ancestor.equals(descendant)) {
-            return true;
-        }
-        BayesianNode node = network.getNode(descendant);
-        for (String parent : node.getGiven()) {
-            if (isAncestor(ancestor, parent)) {
+    // Breadth-first search to check if one variable is an ancestor of another
+    private static boolean isAncestorBFS(String hidden, String target, BayesianNetwork bn) {
+        Queue<String> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+        queue.add(target);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            if (current.equals(hidden)) {
                 return true;
+            }
+            if (visited.add(current)) {  // Only proceed if the current node has not been visited
+                BayesianNode currentNode = bn.getNode(current);
+                if (currentNode != null) {
+                    for (String parent : currentNode.getGiven()) {
+                        queue.add(parent);
+                    }
+                }
             }
         }
         return false;
@@ -138,6 +131,10 @@ public class VariableElimination {
                 if (factor.getVariables().contains(hidden)) {
                     factorsWithHidden.add(factor);
                 }
+            }
+
+            if (factorsWithHidden.isEmpty()) {
+                continue; // Skip if no factors contain the hidden variable
             }
 
             // Sort the factors by size before joining them
@@ -183,6 +180,9 @@ public class VariableElimination {
 
     // Join a list of factors
     private Factor joinFactors(List<Factor> factorsToJoin) {
+        if (factorsToJoin.isEmpty()) {
+            throw new IllegalStateException("No factors to join.");
+        }
         Factor result = factorsToJoin.get(0);
         for (int i = 1; i < factorsToJoin.size(); i++) {
             result = multiply(result, factorsToJoin.get(i));

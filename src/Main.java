@@ -4,7 +4,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input3.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -36,6 +36,18 @@ public class Main {
         }
     }
 
+    private static Set<String> parseEvidence(Set<String> evidenceSet) {
+        Set<String> evidenceNodes = new HashSet<>();
+        for (String ev : evidenceSet) {
+            String[] parts = ev.split("=");
+            if (parts.length == 2) {
+                evidenceNodes.add(parts[0].trim());
+            }
+        }
+        return evidenceNodes;
+    }
+
+
     private static void processBBQuery(String query, BayesianNetwork network, BufferedWriter bw) {
         try {
             String[] parts = query.split("\\|");
@@ -53,7 +65,7 @@ public class Main {
             }
 
             BayesBall bayesBall = new BayesBall(network);
-            boolean independent = bayesBall.isConditionallyIndependent(startNode, endNode, evidence);
+            boolean independent = bayesBall.areIndependent(startNode, endNode, parseEvidence(evidence));
 
             bw.write(independent ? "yes" : "no");
             bw.newLine();
