@@ -1,0 +1,6 @@
+net7.xml
+F-G|C=T,E=two,H=yes
+P(A=T|E=two,F=two) B-C-D-G-I-H
+P(A=F|B=T,C=F,D=T) E-H-F-I-G
+P(G=one|B=T,I=ken) H-E-A-C-D-F
+P(D=T|E=one) H-I-A-C-D-F-B

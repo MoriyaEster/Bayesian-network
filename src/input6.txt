@@ -1,0 +1,6 @@
+net6.xml
+A-C|B=noset
+A-B|
+P(C=run|B=set,A=T)
+P(A=T|C=run) B
+P(A=F|C=stay) B

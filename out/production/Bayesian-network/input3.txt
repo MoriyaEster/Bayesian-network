@@ -1,0 +1,7 @@
+net3.xml
+S-N|F=nice
+P(M=Y|F=nice) N-S
+P(M=Y|F=nice,S=bad) N
+P(M=F|S=good) F-N
+P(F=nice|N=T) M-S
+P(F=boring|S=ok) M-N

@@ -1,0 +1,9 @@
+net4.xml
+D-L|S=T
+P(I=T|G=fine) D-S-L
+P(L=F|D=T) I-G-S
+P(G=low|D=F) I-L-S
+P(G=low|D=F,I=T) L-S
+P(S=F|G=high,L=F) D-I
+P(I=T|L=T) D-G-S
+P(G=fine|S=T) L-D-I

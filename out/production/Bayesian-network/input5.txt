@@ -1,0 +1,8 @@
+net5.xml
+B-G|F=always
+P(H=T|G=high) B-F
+P(H=T|F=never,B=F) G
+P(G=medium|B=T) H-F
+P(F=always|B=T,H=T) G
+P(G=medium|H=T) B-F
+P(G=low|F=always) B-H

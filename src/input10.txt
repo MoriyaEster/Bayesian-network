@@ -1,0 +1,6 @@
+net10.xml
+R-S|
+P(R=T|S=T) G
+P(R=F|S=T) G
+P(S=T|G=T) R
+P(G=F|R=F) S

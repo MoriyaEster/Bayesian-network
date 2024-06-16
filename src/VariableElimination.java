@@ -1,11 +1,11 @@
 import java.util.*;
 
 public class VariableElimination {
-    private BayesianNetwork network;
-    private Map<String, String> evidence;
-    private Map<String, String> queryVariables;
-    private List<String> hiddenVariables;
-    private List<Factor> factors;
+    private final BayesianNetwork network;
+    private final Map<String, String> evidence;
+    private final Map<String, String> queryVariables;
+    private final List<String> hiddenVariables;
+    private final List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
 
@@ -19,7 +19,7 @@ public class VariableElimination {
         this.additionCount = 0;
         initializeFactors();
         applyEvidence();
-        removeIrrelevantVariables();
+        filterIrrelevantVariables();
     }
 
     // Initialize factors from the Bayesian network
@@ -67,39 +67,28 @@ public class VariableElimination {
         factor.getTable().putAll(newTable);
     }
 
-    // Remove irrelevant variables and factors
-    private void removeIrrelevantVariables() {
+    // Filter irrelevant variables and factors
+    private void filterIrrelevantVariables() {
         BayesBall bayesBall = new BayesBall(network);
+        Set<String> relevantVariables = new HashSet<>(queryVariables.keySet());
+        relevantVariables.addAll(evidence.keySet());
 
-        for (int i = 0; i < hiddenVariables.size(); ) {
-            String currentVar = hiddenVariables.get(i);
-            System.out.println("evidence.keySet = " + evidence.keySet());
-            if (!isAncestor(currentVar, queryVariables.keySet(), evidence.keySet(), network) || bayesBall.areIndependent(currentVar, queryVariables.keySet().iterator().next(), evidence.keySet())) {
-                if(bayesBall.areIndependent(currentVar, queryVariables.keySet().iterator().next(), evidence.keySet())) System.out.println("var to remove because BB = " + hiddenVariables.get(i));
-                System.out.println("var to remove = " + hiddenVariables.get(i));
-                hiddenVariables.remove(i);
-                factors.removeIf(factor -> factor.getVariables().contains(currentVar));
-            } else {
-                i++;
+        Set<String> toRemove = new HashSet<>();
+        for (String hiddenVar : hiddenVariables) {
+            boolean isAncestor = relevantVariables.stream().anyMatch(var -> isAncestor(hiddenVar, var, network));
+            boolean isIndependent = bayesBall.areIndependent(hiddenVar, queryVariables.keySet().iterator().next(), evidence.keySet());
+
+            if (!isAncestor || isIndependent) {
+                toRemove.add(hiddenVar);
             }
         }
-    }
 
-    // Check if 'hidden' is an ancestor of any variable in 'targets' within the Bayesian network
-    private static boolean isAncestor(String hidden, Set<String> queryVars, Set<String> evidenceVars, BayesianNetwork bn) {
-        Set<String> targets = new HashSet<>(queryVars);
-        targets.addAll(evidenceVars);
-        for (String target : targets) {
-            if (isAncestorBFS(hidden, target, bn)) {
-                System.out.println("var isAncestor = " + hidden);
-                return true;
-            }
-        }
-        return false;
+        hiddenVariables.removeAll(toRemove);
+        factors.removeIf(factor -> !Collections.disjoint(factor.getVariables(), toRemove));
     }
 
     // Breadth-first search to check if one variable is an ancestor of another
-    private static boolean isAncestorBFS(String hidden, String target, BayesianNetwork bn) {
+    private static boolean isAncestor(String hidden, String target, BayesianNetwork bn) {
         Queue<String> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();
         queue.add(target);
@@ -108,12 +97,10 @@ public class VariableElimination {
             if (current.equals(hidden)) {
                 return true;
             }
-            if (visited.add(current)) {  // Only proceed if the current node has not been visited
+            if (visited.add(current)) {
                 BayesianNode currentNode = bn.getNode(current);
                 if (currentNode != null) {
-                    for (String parent : currentNode.getGiven()) {
-                        queue.add(parent);
-                    }
+                    queue.addAll(currentNode.getGiven());
                 }
             }
         }

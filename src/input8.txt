@@ -1,0 +1,6 @@
+net8.xml
+A-B|
+G-F|D=T,E=F,A=F
+P(B=T|D=T) A-C-E-F-G
+P(D=F|A=T,E=F) B-C-F-G
+P(A=T|C=T,F=T,E=F) D-B-G
