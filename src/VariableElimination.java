@@ -112,6 +112,20 @@ public class VariableElimination {
         System.out.println("Initial Factors:");
         printFactors();
 
+        // Check if there's a factor that contains all query variables and evidence variables
+        Set<String> allVars = new HashSet<>(queryVariables.keySet());
+        allVars.addAll(evidence.keySet());
+
+        for (Factor factor : factors) {
+            if (factor.getVariables().containsAll(allVars)) {
+                System.out.println("Factor with all query and evidence variables found:");
+                printFactor(factor);
+                double result = factor.getProbability(getQueryOutcomes());
+                System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
+                return result;
+            }
+        }
+
         for (String hidden : hiddenVariables) {
             List<Factor> factorsWithHidden = new ArrayList<>();
             for (Factor factor : factors) {
@@ -208,7 +222,7 @@ public class VariableElimination {
             }
 
             double probability = f1.getProbability(f1Outcomes) * f2.getProbability(f2Outcomes);
-            multiplicationCount++; // Increment multiplication count
+            multiplicationCount++;
             result.setProbability(currentOutcomes, probability);
             return;
         }
@@ -258,7 +272,15 @@ public class VariableElimination {
 
     // Normalize the final factor
     private void normalize(Factor factor) {
-        factor.normalize();
+        double sum = 0;
+        for (double value : factor.getTable().values()) {
+            sum += value;
+            additionCount++;
+        }
+        for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
+            factor.getTable().put(entry.getKey(), entry.getValue() / sum);
+        }
+        additionCount--;
     }
 
     // Get the multiplication count

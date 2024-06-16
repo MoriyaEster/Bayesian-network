@@ -9,7 +9,7 @@ public class BayesBall {
     }
 
     public boolean areIndependent(String start, String end, Set<String> evidence) {
-        System.out.println("evidenceSet = "+evidence);
+        //System.out.println("evidenceSet = "+evidence);
         visited.clear();
         return !travelBayesBall(start, end, evidence, "down");
     }
@@ -21,7 +21,7 @@ public class BayesBall {
                 parents.addAll(node.getGiven());
             }
         }
-        System.out.println("Parents of " + nodeName + ": " + parents);
+        //System.out.println("Parents of " + nodeName + ": " + parents);
         return parents;
     }
 
@@ -32,15 +32,15 @@ public class BayesBall {
                 children.add(node.getName());
             }
         }
-        System.out.println("Children of " + nodeName + ": " + children);
+        //System.out.println("Children of " + nodeName + ": " + children);
         return children;
     }
 
     private boolean travelBayesBall(String current, String target, Set<String> evidence, String direction) {
-        System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
+        //System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
 
         if (current.equals(target)) {
-            System.out.println("Reached target: " + target);
+            //System.out.println("Reached target: " + target);
             return true;
         }
 

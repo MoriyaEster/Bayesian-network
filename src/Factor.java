@@ -34,17 +34,6 @@ public class Factor implements Comparable<Factor> {
         return table;
     }
 
-    // Normalize the factor
-    public void normalize() {
-        double sum = 0;
-        for (double value : table.values()) {
-            sum += value;
-        }
-        for (Map.Entry<List<String>, Double> entry : table.entrySet()) {
-            table.put(entry.getKey(), entry.getValue() / sum);
-        }
-    }
-
     // Compare two factors based on the number of variables
     @Override
     public int compareTo(Factor other) {
