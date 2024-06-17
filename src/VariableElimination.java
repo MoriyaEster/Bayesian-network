@@ -44,6 +44,9 @@ public class VariableElimination {
             variables.add(node.getName());
             Factor factor = new Factor(variables);
             populateFactor(factor, node);
+            System.out.println("!!initializeFactors:");
+            printFactors();
+            System.out.println("-----------------");
             factors.add(factor);
         }
     }
@@ -98,7 +101,6 @@ public class VariableElimination {
                 toRemove.add(hiddenVar);
             }
         }
-
         hiddenVariables.removeAll(toRemove);
         factors.removeIf(factor -> !Collections.disjoint(factor.getVariables(), toRemove));
     }
@@ -128,6 +130,17 @@ public class VariableElimination {
         System.out.println("Initial Factors:");
         printFactors();
 
+        factors.removeIf(factor -> factor.size() == 0);
+
+        System.out.println("numbers of factors = " + factors.size());
+        if(factors.size() == 1){
+            Factor factor = factors.getFirst();
+            System.out.println("Factor with all query and evidence variables found:");
+            printFactor(factor);
+            double result = factor.getProbability(getQueryOutcomes());
+            System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
+            return result;
+        }
         // Check if there's a factor that contains all query variables and evidence variables
         Set<String> allVars = new HashSet<>(queryVariables.keySet());
         allVars.addAll(evidence.keySet());
