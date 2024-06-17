@@ -294,6 +294,13 @@ public class VariableElimination {
         Factor result = new Factor(newVariables);
         Map<List<String>, Double> newTable = new HashMap<>();
 
+        // Determine the number of outcomes for the variable to be eliminated
+        Set<String> outcomesSet = new HashSet<>();
+        for (List<String> outcomes : factor.getTable().keySet()) {
+            outcomesSet.add(outcomes.get(index));
+        }
+        int numOutcomes = outcomesSet.size(); // Number of unique outcomes for the eliminated variable
+
         for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
             List<String> outcomes = new ArrayList<>(entry.getKey());
             outcomes.remove(index);
@@ -303,17 +310,20 @@ public class VariableElimination {
         }
 
         result.getTable().putAll(newTable);
-        additionCount += result.tableSize();
+        additionCount += result.tableSize() * (numOutcomes - 1); // Correct calculation for additionCount
         System.out.println("-----------------------------> result size = " + result.tableSize());
+
         return result;
     }
+
+
 
     // Normalize the final factor
     private void normalize(Factor factor) {
         double sum = 0;
         for (double value : factor.getTable().values()) {
             sum += value;
-            additionCount++;
+            if (sum > 0) additionCount++;
         }
         for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
             factor.getTable().put(entry.getKey(), entry.getValue() / sum);
