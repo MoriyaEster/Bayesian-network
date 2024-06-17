@@ -38,6 +38,10 @@ public class Factor implements Comparable<Factor> {
         return variables.size();
     }
 
+    public int tableSize() {
+        return table.size();
+    }
+
     // Compare two factors based on the number of variables
     @Override
     public int compareTo(Factor other) {

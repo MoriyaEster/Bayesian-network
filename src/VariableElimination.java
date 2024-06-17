@@ -8,7 +8,6 @@ public class VariableElimination {
     private final List<Factor> factors;
     private int multiplicationCount;
     private int additionCount;
-    private boolean checkFactorWithAllVarsFlag = false;
 
     public VariableElimination(BayesianNetwork network, Map<String, String> evidence, Map<String, String> queryVariables, List<String> hiddenVariables) {
         this.network = network;
@@ -19,23 +18,10 @@ public class VariableElimination {
         this.multiplicationCount = 0;
         this.additionCount = 0;
         initializeFactors();
-        checkFactorWithAllVars();
         applyEvidence();
         filterIrrelevantVariables();
     }
 
-
-    private void checkFactorWithAllVars() {
-        Set<String> allVars = new HashSet<>(queryVariables.keySet());
-        allVars.addAll(evidence.keySet());
-
-        for (Factor factor : factors) {
-            if (factor.getVariables().containsAll(allVars) && factor.size() == allVars.size()) {
-                checkFactorWithAllVarsFlag = true;
-                System.out.println("checkFactorWithAllVarsFlag = " + checkFactorWithAllVarsFlag);
-            }
-        }
-    }
 
     // Initialize factors from the Bayesian network
     private void initializeFactors() {
@@ -84,7 +70,6 @@ public class VariableElimination {
 
     // Filter irrelevant variables and factors
     private void filterIrrelevantVariables() {
-        //if (checkFactorWithAllVarsFlag) return;
         BayesBall bayesBall = new BayesBall(network);
         Set<String> relevantVariables = new HashSet<>(queryVariables.keySet());
         relevantVariables.addAll(evidence.keySet());
@@ -255,12 +240,6 @@ public class VariableElimination {
 
         Factor result = new Factor(newVariables);
         generateOutcomes(newVariables.size(), new ArrayList<>(), result, f1, f2);
-        System.out.println("The size of result = " + result.size());
-        printFactor(result);
-        multiplicationCount += (int) Math.pow(2,result.size());
-        System.out.println("getMultiplicationCount = " + getMultiplicationCount());
-
-
         return result;
     }
 
@@ -280,6 +259,7 @@ public class VariableElimination {
             }
 
             double probability = f1.getProbability(f1Outcomes) * f2.getProbability(f2Outcomes);
+            multiplicationCount++;
             result.setProbability(currentOutcomes, probability);
             return;
         }
@@ -288,7 +268,7 @@ public class VariableElimination {
         for (String outcome : getPossibleOutcomes(currentVariable)) {
             currentOutcomes.add(outcome);
             generateOutcomes(size, currentOutcomes, result, f1, f2);
-            currentOutcomes.remove(currentOutcomes.size() - 1);
+            currentOutcomes.removeLast();
         }
     }
 
@@ -323,8 +303,8 @@ public class VariableElimination {
         }
 
         result.getTable().putAll(newTable);
-        additionCount += (int) Math.pow(2,result.size());
-        System.out.println("additionCount-- = " + additionCount);
+        additionCount += result.tableSize();
+        System.out.println("-----------------------------> result size = " + result.tableSize());
         return result;
     }
 
@@ -333,12 +313,12 @@ public class VariableElimination {
         double sum = 0;
         for (double value : factor.getTable().values()) {
             sum += value;
+            additionCount++;
         }
         for (Map.Entry<List<String>, Double> entry : factor.getTable().entrySet()) {
             factor.getTable().put(entry.getKey(), entry.getValue() / sum);
         }
-        additionCount += (int) Math.pow(2,factor.size()) - 1;
-        System.out.println("additionCount = " + additionCount);
+        additionCount--;
     }
 
     // Get the multiplication count
