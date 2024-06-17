@@ -44,9 +44,6 @@ public class VariableElimination {
             variables.add(node.getName());
             Factor factor = new Factor(variables);
             populateFactor(factor, node);
-            System.out.println("!!initializeFactors:");
-            printFactors();
-            System.out.println("-----------------");
             factors.add(factor);
         }
     }
@@ -87,7 +84,7 @@ public class VariableElimination {
 
     // Filter irrelevant variables and factors
     private void filterIrrelevantVariables() {
-        if (checkFactorWithAllVarsFlag) return;
+        //if (checkFactorWithAllVarsFlag) return;
         BayesBall bayesBall = new BayesBall(network);
         Set<String> relevantVariables = new HashSet<>(queryVariables.keySet());
         relevantVariables.addAll(evidence.keySet());
@@ -101,9 +98,30 @@ public class VariableElimination {
                 toRemove.add(hiddenVar);
             }
         }
+
+        // Remove irrelevant hidden variables
         hiddenVariables.removeAll(toRemove);
         factors.removeIf(factor -> !Collections.disjoint(factor.getVariables(), toRemove));
+
+        // Check evidence variables for relevance
+        Set<String> evidenceToRemove = new HashSet<>();
+        for (String evidenceVar : evidence.keySet()) {
+            Set<String> remainingEvidence = new HashSet<>(evidence.keySet());
+            remainingEvidence.remove(evidenceVar);
+            boolean isAncestor = relevantVariables.stream().anyMatch(var -> isAncestor(evidenceVar, var, network));
+            boolean isIndependent = bayesBall.areIndependent(evidenceVar, queryVariables.keySet().iterator().next(), remainingEvidence);
+
+            if (!isAncestor || isIndependent) {
+                evidenceToRemove.add(evidenceVar);
+            }
+        }
+
+        // Remove irrelevant evidence variables
+        for (String evidenceVar : evidenceToRemove) {
+            evidence.remove(evidenceVar);
+        }
     }
+
 
     // Breadth-first search to check if one variable is an ancestor of another
     private static boolean isAncestor(String hidden, String target, BayesianNetwork bn) {
@@ -174,6 +192,9 @@ public class VariableElimination {
             // Ensure correct order of joining factors
             Factor joinedFactor = factorsWithHidden.get(0);
             for (int i = 1; i < factorsWithHidden.size(); i++) {
+                System.out.println("----------------------------------------------------------------");
+                System.out.println("hidden = " + factorsWithHidden.get(i).getVariables());
+                System.out.println("----------------------------------------------------------------");
                 joinedFactor = multiply(joinedFactor, factorsWithHidden.get(i));
             }
 
