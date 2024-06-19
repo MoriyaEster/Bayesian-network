@@ -4,7 +4,7 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input4.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -84,10 +84,8 @@ public class Ex1 {
 
             // Extract the whole_query part and the path part
             String whole_query = parts[0].substring(2); // Remove "P("
-            System.out.println("whole_query = " + whole_query);
             String[] queryEvidenceParts = whole_query.split("\\|");
             String queryVarPart = queryEvidenceParts[0].trim();
-            System.out.println("queryVarPart = " + queryVarPart);
 
             // Extract the query variable and its outcome
             String[] queryVariableParts = queryVarPart.split(",");
@@ -129,7 +127,6 @@ public class Ex1 {
             }
 
             // Run the variable elimination algorithm
-            System.out.println("evidence = " + evidence + ", queryVariables = " + queryVariables + ", hiddenVariables = " + hiddenVariables);
             VariableElimination ve = new VariableElimination(network, evidence, queryVariables, hiddenVariables);
             double result = ve.run();
 

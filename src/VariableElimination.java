@@ -130,31 +130,20 @@ public class VariableElimination {
 
     // Perform the variable elimination algorithm
     public double run() {
-        System.out.println("Initial Factors:");
-        printFactors();
-
         factors.removeIf(factor -> factor.size() == 0);
 
-        System.out.println("numbers of factors = " + factors.size());
         if(factors.size() == 1){
             Factor factor = factors.getFirst();
-            System.out.println("Factor with all query and evidence variables found:");
-            printFactor(factor);
             double result = factor.getProbability(getQueryOutcomes());
-            System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
             return result;
         }
         // Check if there's a factor that contains all query variables and evidence variables
         Set<String> allVars = new HashSet<>(queryVariables.keySet());
         allVars.addAll(evidence.keySet());
-        System.out.println("evidence.keySet() = " + evidence.keySet());
 
         for (Factor factor : factors) {
             if (new HashSet<>(factor.getVariables()).containsAll(allVars) && factor.size() == allVars.size()) {
-                System.out.println("Factor with all query and evidence variables found:");
-                printFactor(factor);
                 double result = factor.getProbability(getQueryOutcomes());
-                System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
                 return result;
             }
         }
@@ -177,9 +166,6 @@ public class VariableElimination {
             // Ensure correct order of joining factors
             Factor joinedFactor = factorsWithHidden.get(0);
             for (int i = 1; i < factorsWithHidden.size(); i++) {
-                System.out.println("----------------------------------------------------------------");
-                System.out.println("hidden = " + factorsWithHidden.get(i).getVariables());
-                System.out.println("----------------------------------------------------------------");
                 joinedFactor = multiply(joinedFactor, factorsWithHidden.get(i));
             }
 
@@ -194,12 +180,8 @@ public class VariableElimination {
             normalize(finalFactor);
         }
 
-        System.out.println("Final Factor:");
-        printFactor(finalFactor);
-
         // Extract the probability for the query variable from the final factor
         double result = finalFactor.getProbability(getQueryOutcomes());
-        System.out.printf("Probability: %.5f, Multiplications: %d, Additions: %d%n", result, multiplicationCount, additionCount);
         return result;
     }
 
@@ -213,7 +195,6 @@ public class VariableElimination {
             }
             outcomes.add(outcome);
         }
-        System.out.println("Generated Query Outcomes: " + outcomes);
         return outcomes;
     }
 
@@ -311,7 +292,6 @@ public class VariableElimination {
 
         result.getTable().putAll(newTable);
         additionCount += result.tableSize() * (numOutcomes - 1); // Correct calculation for additionCount
-        System.out.println("-----------------------------> result size = " + result.tableSize());
 
         return result;
     }
