@@ -2,16 +2,16 @@ import java.util.*;
 
 public class BayesBall {
     private BayesianNetwork network;
-    private Set<String> visited = new HashSet<>();
+    private Set<String> visitedNodes;
 
     public BayesBall(BayesianNetwork network) {
         this.network = network;
+        this.visitedNodes = new HashSet<>();
     }
 
     public boolean areIndependent(String start, String end, Set<String> evidence) {
-        //System.out.println("evidenceSet = "+evidence);
-        visited.clear();
-        return !travelBayesBall(start, end, evidence, "down");
+        this.visitedNodes.clear();
+        return !performTraversal(start, end, evidence, Direction.DOWN);
     }
 
     private List<String> getParents(String nodeName) {
@@ -36,56 +36,62 @@ public class BayesBall {
         return children;
     }
 
-    private boolean travelBayesBall(String current, String target, Set<String> evidence, String direction) {
-        //System.out.println("Visiting: " + current + ", Direction: " + direction + ", Evidence: " + evidence);
-
+    private boolean performTraversal(String current, String target, Set<String> evidence, Direction direction) {
         if (current.equals(target)) {
-            //System.out.println("Reached target: " + target);
             return true;
         }
 
         List<String> parents = getParents(current);
         List<String> children = getChildren(current);
 
-        if (visited.contains(current + direction)) return false;
-        visited.add(current + direction);
+        if (!visitedNodes.add(current + direction)) {
+            return false;
+        }
 
         if (!evidence.contains(current)) {
-            if (direction.equals("down")) {
-                // Traverse to children and parents if current node is not in the evidence and direction is down
-                for (String child : children) {
-                    if (travelBayesBall(child, target, evidence, "up")) {
-                        return true;
-                    }
-                }
-                for (String parent : parents) {
-                    if (travelBayesBall(parent, target, evidence, "down")) {
-                        return true;
-                    }
-                }
-            }
-            else if (direction.equals("up")) {
-                // Traverse to children if current node is not in the evidence and direction is up
-                for (String child : children) {
-                    if (travelBayesBall(child, target, evidence, "up")) {
-                        return true;
-                    }
-                }
+            if (direction == Direction.DOWN) {
+                return traverseChildrenFirst(children, target, evidence) || traverseParentsLater(parents, target, evidence);
+            } else if (direction == Direction.UP) {
+                return traverseChildrenFirst(children, target, evidence);
             }
         } else {
-            // Stop descending if current node is in the evidence and direction is down
-            if (direction.equals("down")) {
+            if (direction == Direction.DOWN) {
                 return false;
-            }
-            // Traverse to parents if current node is in the evidence and direction is up
-            else if (direction.equals("up")) {
-                for (String parent : parents) {
-                    if (!current.equals(parent) && travelBayesBall(parent, target, evidence, "down")) {
-                        return true;
-                    }
-                }
+            } else if (direction == Direction.UP) {
+                return traverseParentsFirst(parents, current, target, evidence);
             }
         }
         return false;
+    }
+
+    private boolean traverseChildrenFirst(List<String> children, String target, Set<String> evidence) {
+        for (String child : children) {
+            if (performTraversal(child, target, evidence, Direction.UP)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean traverseParentsLater(List<String> parents, String target, Set<String> evidence) {
+        for (String parent : parents) {
+            if (performTraversal(parent, target, evidence, Direction.DOWN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean traverseParentsFirst(List<String> parents, String current, String target, Set<String> evidence) {
+        for (String parent : parents) {
+            if (!current.equals(parent) && performTraversal(parent, target, evidence, Direction.DOWN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private enum Direction {
+        UP, DOWN
     }
 }

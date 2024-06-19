@@ -26,10 +26,6 @@ public class BayesianNode {
         return outcomes;
     }
 
-    public void setOutcomes(List<String> outcomes) {
-        this.outcomes = outcomes;
-    }
-
     public List<String> getGiven() {
         return given;
     }

@@ -4,7 +4,7 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input4.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
