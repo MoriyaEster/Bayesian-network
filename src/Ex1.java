@@ -1,10 +1,10 @@
 import java.io.*;
 import java.util.*;
 
-public class Main {
+public class Ex1 {
     public static void main(String[] args) {
         // Read input file and parse content
-        try (BufferedReader br = new BufferedReader(new FileReader("src/input10.txt"));
+        try (BufferedReader br = new BufferedReader(new FileReader("src/input4.txt"));
              BufferedWriter bw = new BufferedWriter(new FileWriter("src/output.txt"))) {
 
             // Read the name of the XML file
@@ -115,11 +115,8 @@ public class Main {
             List<String> hiddenVariables = new ArrayList<>();
             if (!path.isEmpty()) {
                 String[] pathNodes = path.split("-");
-                if (pathNodes.length == 2) {
-                    String startNode = pathNodes[0].trim();
-                    String endNode = pathNodes[1].trim();
-                    hiddenVariables.add(startNode);
-                    hiddenVariables.add(endNode);
+                for (String node : pathNodes) {
+                    hiddenVariables.add(node.trim());
                 }
             }
 
