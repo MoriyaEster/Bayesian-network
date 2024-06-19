@@ -77,7 +77,7 @@ public class VariableElimination {
         Set<String> toRemove = new HashSet<>();
         for (String hiddenVar : hiddenVariables) {
             boolean isAncestor = relevantVariables.stream().anyMatch(var -> isAncestor(hiddenVar, var, network));
-            boolean isIndependent = bayesBall.areIndependent(hiddenVar, queryVariables.keySet().iterator().next(), evidence.keySet());
+            boolean isIndependent = bayesBall.areIndependents(hiddenVar, queryVariables.keySet().iterator().next(), evidence.keySet());
 
             if (!isAncestor || isIndependent) {
                 toRemove.add(hiddenVar);
@@ -94,7 +94,7 @@ public class VariableElimination {
             Set<String> remainingEvidence = new HashSet<>(evidence.keySet());
             remainingEvidence.remove(evidenceVar);
             boolean isAncestor = relevantVariables.stream().anyMatch(var -> isAncestor(evidenceVar, var, network));
-            boolean isIndependent = bayesBall.areIndependent(evidenceVar, queryVariables.keySet().iterator().next(), remainingEvidence);
+            boolean isIndependent = bayesBall.areIndependents(evidenceVar, queryVariables.keySet().iterator().next(), remainingEvidence);
 
             if (!isAncestor || isIndependent) {
                 evidenceToRemove.add(evidenceVar);

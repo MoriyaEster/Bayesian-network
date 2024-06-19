@@ -65,7 +65,7 @@ public class Ex1 {
             }
 
             BayesBall bayesBall = new BayesBall(network);
-            boolean independent = bayesBall.areIndependent(startNode, endNode, parseEvidence(evidence));
+            boolean independent = bayesBall.areIndependents(startNode, endNode, parseEvidence(evidence));
 
             bw.write(independent ? "yes" : "no");
             bw.newLine();

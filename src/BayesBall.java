@@ -9,9 +9,9 @@ public class BayesBall {
         this.visitedNodes = new HashSet<>();
     }
 
-    public boolean areIndependent(String start, String end, Set<String> evidence) {
+    public boolean areIndependents(String start, String end, Set<String> evidence) {
         this.visitedNodes.clear();
-        return !performTraversal(start, end, evidence, Direction.DOWN);
+        return !BBTravel(start, end, evidence, Direction.DOWN);
     }
 
     private List<String> getParents(String nodeName) {
@@ -36,7 +36,7 @@ public class BayesBall {
         return children;
     }
 
-    private boolean performTraversal(String current, String target, Set<String> evidence, Direction direction) {
+    private boolean BBTravel(String current, String target, Set<String> evidence, Direction direction) {
         if (current.equals(target)) {
             return true;
         }
@@ -66,7 +66,7 @@ public class BayesBall {
 
     private boolean traverseChildrenFirst(List<String> children, String target, Set<String> evidence) {
         for (String child : children) {
-            if (performTraversal(child, target, evidence, Direction.UP)) {
+            if (BBTravel(child, target, evidence, Direction.UP)) {
                 return true;
             }
         }
@@ -75,7 +75,7 @@ public class BayesBall {
 
     private boolean traverseParentsLater(List<String> parents, String target, Set<String> evidence) {
         for (String parent : parents) {
-            if (performTraversal(parent, target, evidence, Direction.DOWN)) {
+            if (BBTravel(parent, target, evidence, Direction.DOWN)) {
                 return true;
             }
         }
@@ -84,7 +84,7 @@ public class BayesBall {
 
     private boolean traverseParentsFirst(List<String> parents, String current, String target, Set<String> evidence) {
         for (String parent : parents) {
-            if (!current.equals(parent) && performTraversal(parent, target, evidence, Direction.DOWN)) {
+            if (!current.equals(parent) && BBTravel(parent, target, evidence, Direction.DOWN)) {
                 return true;
             }
         }
